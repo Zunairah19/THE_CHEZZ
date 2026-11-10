@@ -6,6 +6,7 @@ A cozy, offline chess game with a soft pink coquette style.
 
 THE CHEZZ is a Python desktop chess game where you can play locally with a friend or challenge the computer. It combines a pink gingham look with classic chess pieces and chess rules.
 
+
 ## Features
 
 - Two-player local chess
@@ -24,3 +25,5 @@ THE CHEZZ is a Python desktop chess game where you can play locally with a frien
 
 ```powershell
 .\.venv\Scripts\python.exe .\main.py
+
+Music: “Pretty” by Alex McCulloch (Pro Sensory), CC0 — https://opengameart.org/content/pretty

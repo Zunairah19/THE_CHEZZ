@@ -1,5 +1,41 @@
 import math
+from pathlib import Path
 import pygame
+
+
+MUSIC_FILE = Path(__file__).resolve().parent / "assets" / "pretty.mp3"
+
+music_enabled = True
+music_loaded = False
+music_started = False
+
+
+def set_music_enabled(enabled):
+    global music_enabled, music_loaded, music_started
+
+    music_enabled = enabled
+
+    try:
+        if pygame.mixer.get_init() is None:
+            pygame.mixer.init()
+
+        if not music_loaded:
+            pygame.mixer.music.load(str(MUSIC_FILE))
+            pygame.mixer.music.set_volume(0.20)
+            music_loaded = True
+
+        if enabled:
+            if music_started:
+                pygame.mixer.music.unpause()
+            else:
+                pygame.mixer.music.play(-1, fade_ms=800)
+                music_started = True
+        else:
+            pygame.mixer.music.pause()
+
+    except pygame.error as error:
+        print("Could not load menu music:", error)
+        music_enabled = False
 
 
 def draw_bow(surface, x, y):
@@ -111,6 +147,55 @@ def draw_pixel_button(surface, rect, label, font, mouse_pos):
     surface.blit(text, text.get_rect(center=rect.center))
 
 
+def draw_music_button(surface, rect, enabled, mouse_pos, font):
+    """Draw a small pixel speaker button: waves mean on; an X means off."""
+    draw_pixel_button(surface, rect, " ", font, mouse_pos)
+
+    ink = (145, 52, 92)
+    center_x, center_y = rect.center
+
+    pygame.draw.rect(surface, ink, (center_x - 13, center_y - 5, 6, 10))
+    pygame.draw.polygon(
+        surface,
+        ink,
+        [
+            (center_x - 7, center_y - 5),
+            (center_x + 2, center_y - 11),
+            (center_x + 2, center_y + 11),
+            (center_x - 7, center_y + 5),
+        ],
+    )
+
+    if enabled:
+        pygame.draw.lines(
+            surface,
+            ink,
+            False,
+            [
+                (center_x + 5, center_y - 6),
+                (center_x + 9, center_y - 3),
+                (center_x + 9, center_y + 3),
+                (center_x + 5, center_y + 6),
+            ],
+            2,
+        )
+    else:
+        pygame.draw.line(
+            surface,
+            ink,
+            (center_x + 5, center_y - 5),
+            (center_x + 12, center_y + 5),
+            2,
+        )
+        pygame.draw.line(
+            surface,
+            ink,
+            (center_x + 12, center_y - 5),
+            (center_x + 5, center_y + 5),
+            2,
+        )
+
+
 def draw_pixel_rose(surface, center_x, center_y):
     cell = 6
     pattern = [
@@ -184,8 +269,10 @@ def show_menu(screen):
     medium_button = pygame.Rect(width // 2 - 150, 415, 300, 62)
     hard_button = pygame.Rect(width // 2 - 150, 505, 300, 62)
     back_button = pygame.Rect(width // 2 - 100, 595, 200, 48)
+    music_button = pygame.Rect(width - 58, 18, 42, 42)
 
     page = "mode"
+    set_music_enabled(music_enabled)
 
     while True:
         for event in pygame.event.get():
@@ -197,7 +284,10 @@ def show_menu(screen):
                     page = "mode"
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if page == "mode":
+                if music_button.collidepoint(event.pos):
+                    set_music_enabled(not music_enabled)
+
+                elif page == "mode":
                     if two_player_button.collidepoint(event.pos):
                         return "two_player"
                     if computer_button.collidepoint(event.pos):
@@ -220,6 +310,13 @@ def show_menu(screen):
         screen.blit(title, title.get_rect(center=(width // 2, 205)))
 
         mouse_pos = pygame.mouse.get_pos()
+        draw_music_button(
+            screen,
+            music_button,
+            music_enabled,
+            mouse_pos,
+            small_font,
+        )
 
         if page == "mode":
             prompt = prompt_font.render("choose how to play", True, rose)
